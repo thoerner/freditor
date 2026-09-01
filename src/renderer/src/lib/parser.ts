@@ -23,9 +23,11 @@ export interface ParseResult {
  */
 const CUE_RE = /^([\p{L}\p{N}][\p{L}\p{N} .\-_'()#]{0,48}?)\s*:\s*(.*)$/u
 
-function looksLikeSpeaker(label: string): boolean {
+function looksLikeSpeaker(label: string, rest: string): boolean {
   if (!/\p{L}/u.test(label)) return false // must contain a letter ("10:30" is not a cue)
   if (label.trim().split(/\s+/).length > 5) return false // long phrases are prose, not names
+  // "It is 10:30 right now" — a colon between digits is a time, not a speaker label
+  if (/\d$/.test(label) && /^\d/.test(rest)) return false
   return true
 }
 
@@ -108,7 +110,7 @@ export function parseScript(raw: string): ParseResult {
     }
 
     const m = trimmed.match(CUE_RE)
-    if (m && looksLikeSpeaker(m[1])) {
+    if (m && looksLikeSpeaker(m[1], m[2] ?? '')) {
       flushCue()
       currentCue = { speaker: m[1].trim(), text: m[2] ?? '' }
       continue

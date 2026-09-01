@@ -3,10 +3,13 @@ import { promisify } from 'util'
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import type { ExportPlanEntry } from '../shared/types'
-import { resolveCacheFile } from './projectio'
 
 const execFileAsync = promisify(execFile)
+
+export interface ResolvedEntry {
+  path: string
+  gapAfterMs: number
+}
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const ffmpegPath = (require('ffmpeg-static') as string).replace('app.asar', 'app.asar.unpacked')
@@ -20,10 +23,6 @@ async function ffmpeg(args: string[]): Promise<void> {
     const e = err as { stderr?: string; message?: string }
     throw new Error(`ffmpeg failed: ${e.stderr?.trim() || e.message || 'unknown error'}`)
   }
-}
-
-function resolveEntryPath(kind: 'cache' | 'abs', file: string): string {
-  return kind === 'cache' ? resolveCacheFile(file) : file
 }
 
 /** Escape a path for the ffmpeg concat demuxer list file. */
@@ -47,7 +46,7 @@ async function encodeFinal(
  * mixed formats (mp3 generations, arbitrary user clips) concatenate cleanly.
  */
 export async function stitchAndExport(
-  entries: ExportPlanEntry[],
+  entries: ResolvedEntry[],
   format: 'wav' | 'mp3',
   outPath: string
 ): Promise<void> {
@@ -58,7 +57,7 @@ export async function stitchAndExport(
     const normalized = new Map<string, string>()
     let i = 0
     for (const entry of entries) {
-      const src = resolveEntryPath(entry.kind, entry.file)
+      const src = entry.path
       if (!existsSync(src)) throw new Error(`Audio file missing: ${src}`)
       if (!normalized.has(src)) {
         const dst = join(tmp, `in-${i++}.wav`)
@@ -91,7 +90,7 @@ export async function stitchAndExport(
     // 3) Build concat list (no trailing gap after the last item)
     const lines: string[] = []
     entries.forEach((entry, idx) => {
-      const src = resolveEntryPath(entry.kind, entry.file)
+      const src = entry.path
       lines.push(concatEscape(normalized.get(src)!))
       const ms = Math.max(0, Math.round(entry.gapAfterMs))
       if (ms > 0 && idx < entries.length - 1) {
@@ -110,14 +109,14 @@ export async function stitchAndExport(
 
 /** Export each file individually (per-line / per-section stems) into a directory. */
 export async function exportSeparate(
-  files: { kind: 'cache' | 'abs'; file: string; name: string }[],
+  files: { path: string; name: string }[],
   format: 'wav' | 'mp3',
   outDir: string
 ): Promise<string[]> {
   if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true })
   const written: string[] = []
   for (const f of files) {
-    const src = resolveEntryPath(f.kind, f.file)
+    const src = f.path
     if (!existsSync(src)) throw new Error(`Audio file missing: ${src}`)
     const safeName = f.name.replace(/[/\\:*?"<>|]/g, '_')
     const outPath = join(outDir, `${safeName}.${format}`)

@@ -1,0 +1,26 @@
+# Cold open
+
+Voice 1: Hey Sam. Did you hear the news this morning?
+
+Voice 2: Hey Joe. I did! I couldn't believe it at first.
+Honestly, I had to read the headline three times.
+
+Voice 1: Same here. Okay, let's get into it.
+
+# Main story
+
+Voice 2: So here's what actually happened. Late last night, the city council
+voted to approve the new transit plan.
+
+Rachael: This is your host reminder that we'll link all sources in the show notes.
+
+Voice 1: Thanks Rachel. So Sam, what does this mean for the average commuter?
+
+Voice 2: Great question. In the short term, not much. But over the next two years,
+three new bus lines will roll out across the east side.
+
+# Outro
+
+Voice 1: That's all for today. Thanks for listening!
+
+Voice 2: See you next week.

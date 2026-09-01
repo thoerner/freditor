@@ -132,6 +132,9 @@ export function registerIpcHandlers(): void {
   })
 
   // ---- Export ----
+  const resolvePath = (kind: 'cache' | 'abs', file: string): string =>
+    kind === 'cache' ? projectio.resolveCacheFile(file) : file
+
   ipcMain.handle('export:stitch', async (_e, req: ExportRequest) => {
     const win = focusedWindow()
     const res = await dialog.showSaveDialog(win!, {
@@ -143,7 +146,11 @@ export function registerIpcHandlers(): void {
     const outPath = res.filePath.endsWith(`.${req.format}`)
       ? res.filePath
       : `${res.filePath}.${req.format}`
-    await stitchAndExport(req.entries, req.format, outPath)
+    const entries = req.entries.map((e) => ({
+      path: resolvePath(e.kind, e.file),
+      gapAfterMs: e.gapAfterMs
+    }))
+    await stitchAndExport(entries, req.format, outPath)
     return { path: outPath }
   })
 
@@ -155,7 +162,11 @@ export function registerIpcHandlers(): void {
     })
     if (res.canceled || res.filePaths.length === 0) return null
     const dir = join(res.filePaths[0])
-    const files = await exportSeparate(req.files, req.format, dir)
+    const files = await exportSeparate(
+      req.files.map((f) => ({ path: resolvePath(f.kind, f.file), name: f.name })),
+      req.format,
+      dir
+    )
     return { dir, files }
   })
 

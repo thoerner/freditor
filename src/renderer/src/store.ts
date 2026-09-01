@@ -803,6 +803,14 @@ function entriesFor(project: Project, items: Project['sections'][0]['items']): P
   return entries
 }
 
+if (import.meta.env.DEV) {
+  // Exposed for debugging and scripted smoke tests only (dev builds)
+  ;(window as unknown as { __store: typeof useStore }).__store = useStore
+  void import('./lib/parser').then((m) => {
+    ;(window as unknown as { __parseScript: typeof m.parseScript }).__parseScript = m.parseScript
+  })
+}
+
 /** Convenience selectors used across components */
 export function useLineStatusMap(): Map<string, ReturnType<typeof lineStatus>> {
   const project = useStore((s) => s.project)
