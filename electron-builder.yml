@@ -3,17 +3,17 @@ productName: freditor
 directories:
   buildResources: build
 files:
-  - '!**/.vscode/*'
-  - '!src/*'
-  - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - 'out/**'
+  - 'resources/**'
 asarUnpack:
   - resources/**
   - node_modules/ffmpeg-static/**
 win:
   executableName: freditor
+  files:
+    - 'out/**'
+    - 'resources/**'
+    - '!node_modules/ffmpeg-static/ffmpeg'
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -32,10 +32,13 @@ dmg:
 linux:
   target:
     - AppImage
-    - snap
     - deb
   maintainer: tim
   category: Utility
+  files:
+    - 'out/**'
+    - 'resources/**'
+    - '!node_modules/ffmpeg-static/ffmpeg.exe'
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
