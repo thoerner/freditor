@@ -13,9 +13,14 @@ const ffmpegPath = require('ffmpeg-static') as string
 
 function makeTone(path: string, hz: number, seconds: number, mp3 = false): void {
   execFileSync(ffmpegPath, [
-    '-hide_banner', '-loglevel', 'error', '-y',
-    '-f', 'lavfi',
-    '-i', `sine=frequency=${hz}:duration=${seconds}`,
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-y',
+    '-f',
+    'lavfi',
+    '-i',
+    `sine=frequency=${hz}:duration=${seconds}`,
     ...(mp3 ? ['-c:a', 'libmp3lame', '-b:a', '128k'] : ['-ar', '22050', '-ac', '1']),
     path
   ])
@@ -101,7 +106,11 @@ async function main(): Promise<void> {
     console.log('error path: missing file')
     let threw = false
     try {
-      await stitchAndExport([{ path: join(tmp, 'nope.wav'), gapAfterMs: 0 }], 'wav', join(tmp, 'x.wav'))
+      await stitchAndExport(
+        [{ path: join(tmp, 'nope.wav'), gapAfterMs: 0 }],
+        'wav',
+        join(tmp, 'x.wav')
+      )
     } catch (err) {
       threw = /missing/i.test(String(err))
     }

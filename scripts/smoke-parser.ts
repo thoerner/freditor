@@ -22,11 +22,12 @@ function check(name: string, cond: boolean, detail?: unknown): void {
 console.log('parser: demo-script.txt')
 const demo = readFileSync(join(__dirname, '../demo/demo-script.txt'), 'utf-8')
 const res = parseScript(demo)
-check('3 sections from headings', res.sections.length === 3, res.sections.map((s) => s.name))
 check(
-  'section names',
-  res.sections.map((s) => s.name).join('|') === 'Cold open|Main story|Outro'
+  '3 sections from headings',
+  res.sections.length === 3,
+  res.sections.map((s) => s.name)
 )
+check('section names', res.sections.map((s) => s.name).join('|') === 'Cold open|Main story|Outro')
 check('3 speakers detected', res.speakers.join('|') === 'Voice 1|Voice 2|Rachael', res.speakers)
 const allCues = res.sections.flatMap((s) => s.cues)
 check('9 cues total', allCues.length === 9, allCues.length)
@@ -52,7 +53,10 @@ check(
 check('divider creates second section', edge.sections.length === 2, edge.sections.length)
 
 const noise = parseScript('just some prose\nwith no labels\n')
-check('prose without labels -> no cues, orphans reported', noise.sections.length === 0 && noise.orphanText.length === 2)
+check(
+  'prose without labels -> no cues, orphans reported',
+  noise.sections.length === 0 && noise.orphanText.length === 2
+)
 
 // ---- fuzzy matching ----
 console.log('fuzzy matcher')
