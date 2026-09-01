@@ -31,7 +31,16 @@ into a finished episode.
 Projects are saved as `.freditor` JSON files with generated audio cached in a
 sibling `<name>.freditor.assets/` folder.
 
-## Setup
+## Download (Windows)
+
+Grab the latest installer (`freditor-x.y.z-setup.exe`) or portable zip from the
+[releases page](https://github.com/thoerner/freditor/releases).
+
+The app isn't code-signed, so Windows SmartScreen will warn on first run —
+click **More info → Run anyway**. On first launch, open Settings (⚙) and paste
+your ElevenLabs API key (ElevenLabs → Developers → API keys).
+
+## Setup (from source)
 
 ```sh
 npm install
