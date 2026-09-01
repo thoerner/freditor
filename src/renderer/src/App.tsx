@@ -1,34 +1,48 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { useEffect } from 'react'
+import { useStore } from './store'
+import { TopBar } from './components/TopBar'
+import { Sidebar } from './components/Sidebar'
+import { SectionEditor } from './components/SectionEditor'
+import { SettingsModal } from './components/SettingsModal'
+import { ImportWizard } from './components/ImportWizard'
+import { ExportDialog } from './components/ExportDialog'
 
 function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const init = useStore((s) => s.init)
+  const modal = useStore((s) => s.modal)
+  const toast = useStore((s) => s.toast)
+  const saveProject = useStore((s) => s.saveProject)
+
+  useEffect(() => {
+    void init()
+  }, [init])
+
+  // Ctrl/Cmd+S saves
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        void saveProject(e.shiftKey)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [saveProject])
 
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
+    <div className="app">
+      <TopBar />
+      <div className="app-body">
+        <Sidebar />
+        <div className="main-pane">
+          <SectionEditor />
         </div>
       </div>
-      <Versions></Versions>
-    </>
+      {modal === 'settings' && <SettingsModal />}
+      {modal === 'import' && <ImportWizard />}
+      {modal === 'export' && <ExportDialog />}
+      {toast && <div className="toast">{toast}</div>}
+    </div>
   )
 }
 

@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: tmp-scaffold
+appId: com.freditor.app
+productName: freditor
 directories:
   buildResources: build
 files:
@@ -11,8 +11,9 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+  - node_modules/ffmpeg-static/**
 win:
-  executableName: tmp-scaffold
+  executableName: freditor
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -33,7 +34,7 @@ linux:
     - AppImage
     - snap
     - deb
-  maintainer: electronjs.org
+  maintainer: tim
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
