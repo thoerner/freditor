@@ -31,6 +31,17 @@ into a finished episode.
 Projects are saved as `.freditor` JSON files with generated audio cached in a
 sibling `<name>.freditor.assets/` folder.
 
+## Web version
+
+A browser version runs at [freditor.crypt0potam.us](https://freditor.crypt0potam.us) —
+no install needed. Audio is cached in the browser (IndexedDB), projects
+autosave locally and can be saved/opened as `.freditor` files, and exports
+download as WAV/MP3 (stems come as a zip). The desktop app is still the best
+experience (OS-keychain key storage, real file paths, ffmpeg exports), but the
+web version covers the full workflow.
+
+Deploy updates with `scripts/deploy-web.sh` (S3 + CloudFront).
+
 ## Download (Windows)
 
 Grab the latest installer (`freditor-x.y.z-setup.exe`) or portable zip from the
