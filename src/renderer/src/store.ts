@@ -30,6 +30,7 @@ import {
 import type { ParseResult } from './lib/parser'
 import { player, stopPreview, type PlayEntry } from './lib/player'
 import { ipcErrorMessage } from './lib/errors'
+import { api, isWeb } from './backend'
 
 export type ModalKind = 'settings' | 'import' | 'export' | null
 
@@ -174,11 +175,38 @@ export const useStore = create<StoreState>()(
 
     init: async () => {
       player.onItemChange = (itemId) => set({ playingItemId: itemId })
+      // Web build: restore the autosaved project and keep autosaving on change
+      if (isWeb) {
+        try {
+          const saved = localStorage.getItem('freditor.autosave')
+          if (saved) {
+            const project = JSON.parse(saved) as Project
+            if (project.version === 1) set({ project })
+          }
+        } catch (err) {
+          console.error('Failed to restore autosaved project:', err)
+        }
+        let lastProject = get().project
+        let timer: ReturnType<typeof setTimeout> | null = null
+        useStore.subscribe((s) => {
+          if (s.project !== lastProject) {
+            lastProject = s.project
+            if (timer) clearTimeout(timer)
+            timer = setTimeout(() => {
+              try {
+                localStorage.setItem('freditor.autosave', JSON.stringify(lastProject))
+              } catch (err) {
+                console.error('Autosave failed:', err)
+              }
+            }, 800)
+          }
+        })
+      }
       const project = get().project
       set({ selectedSectionId: project.sections[0]?.id ?? '' })
-      await window.api.project.new(project.id)
+      await api.project.new(project.id)
       try {
-        const view = await window.api.settings.get()
+        const view = await api.settings.get()
         set({ settingsView: view })
         if (view.hasApiKey) {
           void get().refreshVoices()
@@ -203,9 +231,9 @@ export const useStore = create<StoreState>()(
     // ---- settings / account ----
 
     saveApiKey: async (key) => {
-      const res = await window.api.el.validateKey(key)
+      const res = await api.el.validateKey(key)
       if (!res.ok) return res
-      const view = await window.api.settings.setApiKey(key)
+      const view = await api.settings.setApiKey(key)
       set({ settingsView: view })
       void get().refreshVoices()
       void get().refreshSubscription()
@@ -213,14 +241,14 @@ export const useStore = create<StoreState>()(
     },
 
     clearApiKey: async () => {
-      const view = await window.api.settings.clearApiKey()
+      const view = await api.settings.clearApiKey()
       set({ settingsView: view, voices: [], voicesStatus: 'idle', subscription: null })
     },
 
     refreshVoices: async () => {
       set({ voicesStatus: 'loading', voicesError: null })
       try {
-        const voices = await window.api.el.listVoices()
+        const voices = await api.el.listVoices()
         set({ voices, voicesStatus: 'ready' })
       } catch (err) {
         set({ voicesStatus: 'error', voicesError: ipcErrorMessage(err) })
@@ -229,7 +257,7 @@ export const useStore = create<StoreState>()(
 
     refreshSubscription: async () => {
       try {
-        const subscription = await window.api.el.getSubscription()
+        const subscription = await api.el.getSubscription()
         set({ subscription, subscriptionError: null })
       } catch (err) {
         set({ subscriptionError: ipcErrorMessage(err) })
@@ -241,7 +269,7 @@ export const useStore = create<StoreState>()(
     newProjectAction: async () => {
       get().stopPlayback()
       const project = newProject()
-      await window.api.project.new(project.id)
+      await api.project.new(project.id)
       set({
         project,
         projectPath: null,
@@ -253,7 +281,7 @@ export const useStore = create<StoreState>()(
 
     openProject: async () => {
       try {
-        const res = await window.api.project.openDialog()
+        const res = await api.project.openDialog()
         if (!res) return
         get().stopPlayback()
         set({
@@ -270,7 +298,7 @@ export const useStore = create<StoreState>()(
 
     openRecent: async (path) => {
       try {
-        const res = await window.api.project.openPath(path)
+        const res = await api.project.openPath(path)
         get().stopPlayback()
         set({
           project: res.project,
@@ -286,14 +314,14 @@ export const useStore = create<StoreState>()(
 
     saveProject: async (saveAs = false) => {
       try {
-        const res = await window.api.project.save(get().project, saveAs)
+        const res = await api.project.save(get().project, saveAs)
         if (!res) return
         set({ projectPath: res.path, dirty: false })
         // Clean up cache files no longer referenced by any line
         const referenced = allLines(get().project)
           .map((l) => l.generation?.audioFile)
           .filter((f): f is string => !!f)
-        void window.api.project.pruneCache(referenced)
+        void api.project.pruneCache(referenced)
         get().showToast(`Saved to ${res.path}`)
       } catch (err) {
         get().showToast(`Save failed: ${ipcErrorMessage(err)}`)
@@ -492,7 +520,7 @@ export const useStore = create<StoreState>()(
       }),
 
     insertClips: async (sectionId, index) => {
-      const picked = await window.api.file.pickClips()
+      const picked = await api.file.pickClips()
       if (!picked) return
       const clips: ClipItem[] = picked.map((p) => newClip(p.path, p.name))
       set((s) => {
@@ -685,7 +713,7 @@ export const useStore = create<StoreState>()(
         }
 
         try {
-          const result = await window.api.el.generate(req)
+          const result = await api.el.generate(req)
           if (result.requestId) {
             const list = runRequestIds.get(voiceId) ?? []
             list.push(result.requestId)

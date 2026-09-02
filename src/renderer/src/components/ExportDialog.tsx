@@ -4,6 +4,7 @@ import { useStore } from '../store'
 import { gapAfter, getSpeaker, lineStatus } from '../lib/model'
 import { Modal } from './Modal'
 import { ipcErrorMessage } from '../lib/errors'
+import { api, isWeb } from '../backend'
 
 type Scope = 'episode' | string // section id
 
@@ -69,7 +70,7 @@ export function ExportDialog(): React.JSX.Element {
           scope === 'episode'
             ? slug(project.name)
             : slug(project.sections.find((s) => s.id === scope)?.name ?? 'section')
-        const res = await window.api.export.stitch({ entries, format, suggestedName: name })
+        const res = await api.export.stitch({ entries, format, suggestedName: name })
         if (res) {
           setResult(res.path)
           showToast(`Exported ${res.path}`)
@@ -83,7 +84,7 @@ export function ExportDialog(): React.JSX.Element {
               : (getSpeaker(project, i.item.speakerId)?.name ?? 'line')
           return { kind: i.entry!.kind, file: i.entry!.file, name: `${num} ${label}` }
         })
-        const res = await window.api.export.separate({ files, format })
+        const res = await api.export.separate({ files, format })
         if (res) {
           setResult(res.dir)
           showToast(`Exported ${res.files.length} files to ${res.dir}`)
@@ -102,10 +103,8 @@ export function ExportDialog(): React.JSX.Element {
       onClose={() => setModal(null)}
       footer={
         <>
-          {result && (
-            <button onClick={() => void window.api.shell.showItemInFolder(result)}>
-              Show in folder
-            </button>
+          {result && !isWeb && (
+            <button onClick={() => void api.shell.showItemInFolder(result)}>Show in folder</button>
           )}
           <button onClick={() => setModal(null)}>Close</button>
           <button

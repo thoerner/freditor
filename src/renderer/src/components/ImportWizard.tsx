@@ -6,6 +6,7 @@ import { formatChars } from '../lib/model'
 import { Modal } from './Modal'
 import { VoiceSelect } from './VoiceSelect'
 import { ipcErrorMessage } from '../lib/errors'
+import { api } from '../backend'
 
 export function ImportWizard(): React.JSX.Element {
   const voices = useStore((s) => s.voices)
@@ -31,7 +32,7 @@ export function ImportWizard(): React.JSX.Element {
 
   const pickFile = async (): Promise<void> => {
     try {
-      const res = await window.api.file.importScriptDialog()
+      const res = await api.file.importScriptDialog()
       if (!res) return
       setText(res.text)
       setFileName(res.fileName)

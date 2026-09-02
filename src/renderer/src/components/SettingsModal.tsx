@@ -3,6 +3,7 @@ import { MODELS } from '../../../shared/types'
 import { useStore } from '../store'
 import { Modal } from './Modal'
 import { formatChars } from '../lib/model'
+import { isWeb } from '../backend'
 
 export function SettingsModal(): React.JSX.Element {
   const settingsView = useStore((s) => s.settingsView)
@@ -68,7 +69,9 @@ export function SettingsModal(): React.JSX.Element {
       {keyStatus === 'error' && <span className="error-text">{keyError}</span>}
       {settingsView?.keyStorageInsecure && (
         <span className="warn-text">
-          Your OS keychain is unavailable, so the key is stored unencrypted on disk.
+          {isWeb
+            ? 'The key is stored in this browser (localStorage) and never sent anywhere except the ElevenLabs API.'
+            : 'Your OS keychain is unavailable, so the key is stored unencrypted on disk.'}
         </span>
       )}
       <p className="hint">

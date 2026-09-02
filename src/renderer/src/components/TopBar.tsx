@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../store'
 import { allLines, estimateChars, formatChars, pendingLines } from '../lib/model'
+import { api, isWeb } from '../backend'
 
 export function TopBar(): React.JSX.Element {
   const project = useStore((s) => s.project)
@@ -76,16 +77,18 @@ export function TopBar(): React.JSX.Element {
       <button onClick={() => void newProjectAction()}>New</button>
       <div ref={recentRef} style={{ position: 'relative', display: 'flex', gap: 4 }}>
         <button onClick={() => void openProject()}>Open</button>
-        <button
-          className="ghost"
-          title="Recent projects"
-          onClick={() => {
-            setRecentOpen(!recentOpen)
-            void window.api.project.getRecent().then(setRecent)
-          }}
-        >
-          ▾
-        </button>
+        {!isWeb && (
+          <button
+            className="ghost"
+            title="Recent projects"
+            onClick={() => {
+              setRecentOpen(!recentOpen)
+              void api.project.getRecent().then(setRecent)
+            }}
+          >
+            ▾
+          </button>
+        )}
         {recentOpen && (
           <div
             style={{

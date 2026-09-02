@@ -1,3 +1,5 @@
+import { api } from '../backend'
+
 export interface AudioSourceRef {
   kind: 'cache' | 'abs'
   file: string
@@ -35,7 +37,7 @@ class Player {
     const key = keyOf(src)
     const cached = this.buffers.get(key)
     if (cached) return cached
-    const bytes = await window.api.file.readAudio(src.kind, src.file)
+    const bytes = await api.file.readAudio(src.kind, src.file)
     const buffer = await this.getCtx().decodeAudioData(bytes)
     this.buffers.set(key, buffer)
     return buffer
